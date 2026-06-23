@@ -67,7 +67,7 @@ Generates 200,000 products and loads them in ~7 seconds via `COPY`.
 ## Local setup
 
 ```bash
-git clone <YOUR_REPO_URL_HERE>
+git clone https://github.com/Rajathk6/Product-Catalog
 cd product-catalog
 npm install
 cp .env.example .env   # fill in your DATABASE_URL
