@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Product Catalog</title>
+<style>
+  :root {
+    --ink: #1c1d1f;
+    --ink-soft: #5a5d63;
+    --paper: #fafaf8;
+    --line: #e3e1dc;
+    --accent: #2f5d4f;
+    --accent-soft: #e8f0ec;
+    --mono: 'IBM Plex Mono', 'SF Mono', Consolas, monospace;
+    --sans: 'Inter', -apple-system, 'Segoe UI', sans-serif;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--sans);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap {
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 40px 24px 80px;
+  }
+
+  header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 28px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  h1 {
+    font-size: 20px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    margin: 0;
+  }
+
+  .count {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--ink-soft);
+  }
+
+  .controls {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+
+  select, input {
+    font-family: var(--sans);
+    font-size: 13px;
+    padding: 8px 12px;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    background: white;
+    color: var(--ink);
+  }
+
+  select:focus, input:focus {
+    outline: 2px solid var(--accent);
+    outline-offset: -1px;
+  }
+
+  .control-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--ink-soft);
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+
+  thead th {
+    text-align: left;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--ink-soft);
+    font-weight: 600;
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--ink);
+  }
+
+  tbody td {
+    padding: 11px 12px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  tbody tr:hover {
+    background: var(--accent-soft);
+  }
+
+  td.id, td.price {
+    font-family: var(--mono);
+    font-size: 12.5px;
+  }
+
+  td.price { color: var(--accent); font-weight: 600; }
+
+  td.category {
+    color: var(--ink-soft);
+  }
+
+  td.date {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--ink-soft);
+  }
+
+  .pager {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    margin-top: 28px;
+  }
+
+  .pager button {
+    font-family: var(--sans);
+    font-size: 13px;
+    font-weight: 500;
+    padding: 0 16px;
+    height: 36px;
+    border: 1px solid var(--line);
+    background: white;
+    border-radius: 6px;
+    cursor: pointer;
+    color: var(--ink);
+  }
+
+  .pager button:hover:not(:disabled) {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  .pager button:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+  }
+
+  .pager .page-label {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--ink-soft);
+    min-width: 60px;
+    text-align: center;
+  }
+
+  .state-msg {
+    text-align: center;
+    padding: 40px;
+    color: var(--ink-soft);
+    font-size: 13px;
+  }
+
+  .skeleton-row td {
+    padding: 11px 12px;
+  }
+
+  .skeleton-bar {
+    height: 12px;
+    background: linear-gradient(90deg, var(--line) 25%, #ececea 50%, var(--line) 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.4s infinite;
+    border-radius: 3px;
+  }
+
+  @keyframes shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <h1>Product Catalog</h1>
+    <span class="count" id="resultCount">—</span>
+  </header>
+
+  <div class="controls">
+    <div class="control-group">
+      <label for="categoryFilter">Category</label>
+      <select id="categoryFilter">
+        <option value="">All categories</option>
+      </select>
+    </div>
+    <div class="control-group">
+      <label for="limitSelect">Per page</label>
+      <select id="limitSelect">
+        <option value="10">10</option>
+        <option value="20" selected>20</option>
+        <option value="50">50</option>
+        <option value="100">100</option>
+      </select>
+    </div>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th style="width:70px">ID</th>
+        <th>Name</th>
+        <th style="width:130px">Category</th>
+        <th style="width:90px">Price</th>
+        <th style="width:170px">Created</th>
+      </tr>
+    </thead>
+    <tbody id="tableBody"></tbody>
+  </table>
+
+  <div id="emptyState" class="state-msg" style="display:none">No products match this filter.</div>
+
+  <div class="pager" id="pager"></div>
+</div>
+
+<script>
+const API_BASE = '';
+const tableBody = document.getElementById('tableBody');
+const pager = document.getElementById('pager');
+const categoryFilter = document.getElementById('categoryFilter');
+const limitSelect = document.getElementById('limitSelect');
+const resultCount = document.getElementById('resultCount');
+const emptyState = document.getElementById('emptyState');
+
+// Simple cursor-based pagination: a stack of cursors we've visited.
+// cursorStack[i] = the cursor used to fetch the page CURRENTLY at stack position i.
+// cursorStack[0] is always null (page 1 needs no cursor).
+let cursorStack = [null];
+let currentPageIndex = 0;   // index into cursorStack for the page currently shown
+let lastNextCursor = null;  // next_cursor returned by the most recent successful fetch
+let hasMore = false;
+let knownCategories = new Set();
+
+function formatDate(iso) {
+  const d = new Date(iso);
+  return d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) +
+         ' ' + d.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
+}
+
+function formatPrice(p) {
+  return '₹' + Number(p).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function renderSkeleton(rows = 8) {
+  tableBody.innerHTML = '';
+  emptyState.style.display = 'none';
+  for (let i = 0; i < rows; i++) {
+    const tr = document.createElement('tr');
+    tr.className = 'skeleton-row';
+    tr.innerHTML = `
+      <td><div class="skeleton-bar" style="width:40px"></div></td>
+      <td><div class="skeleton-bar" style="width:70%"></div></td>
+      <td><div class="skeleton-bar" style="width:80px"></div></td>
+      <td><div class="skeleton-bar" style="width:60px"></div></td>
+      <td><div class="skeleton-bar" style="width:120px"></div></td>
+    `;
+    tableBody.appendChild(tr);
+  }
+}
+
+function renderRows(products) {
+  tableBody.innerHTML = '';
+  if (products.length === 0) {
+    emptyState.style.display = 'block';
+    return;
+  }
+  emptyState.style.display = 'none';
+  for (const p of products) {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td class="id">#${p.id}</td>
+      <td>${escapeHtml(p.name)}</td>
+      <td class="category">${escapeHtml(p.category)}</td>
+      <td class="price">${formatPrice(p.price)}</td>
+      <td class="date">${formatDate(p.created_at)}</td>
+    `;
+    tableBody.appendChild(tr);
+    knownCategories.add(p.category);
+  }
+  refreshCategoryOptions();
+}
+
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+function refreshCategoryOptions() {
+  const current = categoryFilter.value;
+  const sorted = Array.from(knownCategories).sort();
+  categoryFilter.innerHTML = '<option value="">All categories</option>' +
+    sorted.map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
+  categoryFilter.value = current;
+}
+
+function renderPager() {
+  pager.innerHTML = '';
+
+  const prevBtn = document.createElement('button');
+  prevBtn.textContent = '← Prev';
+  prevBtn.disabled = currentPageIndex === 0;
+  prevBtn.onclick = goPrev;
+  pager.appendChild(prevBtn);
+
+  const label = document.createElement('span');
+  label.className = 'page-label';
+  label.textContent = 'Page ' + (currentPageIndex + 1);
+  pager.appendChild(label);
+
+  const nextBtn = document.createElement('button');
+  nextBtn.textContent = 'Next →';
+  nextBtn.disabled = !hasMore;
+  nextBtn.onclick = goNext;
+  pager.appendChild(nextBtn);
+}
+
+async function loadPage(cursor, pageIndex) {
+  renderSkeleton();
+
+  const limit = limitSelect.value;
+  const category = categoryFilter.value;
+
+  const params = new URLSearchParams({ limit });
+  if (category) params.set('category', category);
+  if (cursor) {
+    params.set('cursor_created_at', cursor.created_at);
+    params.set('cursor_id', cursor.id);
+  }
+
+  try {
+    const url = `${API_BASE}/products?${params.toString()}`;
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('Request failed: ' + res.status);
+    const json = await res.json();
+
+    currentPageIndex = pageIndex;
+    hasMore = Boolean(json.has_more);
+    lastNextCursor = json.next_cursor || null;
+
+    renderRows(json.data);
+    resultCount.textContent = `${json.data.length} shown · page ${pageIndex + 1}`;
+    renderPager();
+  } catch (err) {
+    console.error('Failed to load products:', err);
+    tableBody.innerHTML = '';
+    emptyState.textContent = 'Could not load products. Check the API is running.';
+    emptyState.style.display = 'block';
+    resultCount.textContent = '—';
+  }
+}
+
+function goNext() {
+  if (!hasMore || !lastNextCursor) return;
+  const nextIndex = currentPageIndex + 1;
+  // Save the cursor that got us to this next page, so "Prev" can return to it later
+  cursorStack[nextIndex] = lastNextCursor;
+  loadPage(lastNextCursor, nextIndex);
+}
+
+function goPrev() {
+  if (currentPageIndex === 0) return;
+  const prevIndex = currentPageIndex - 1;
+  const cursorForPrevPage = cursorStack[prevIndex]; // null if prevIndex is 0
+  loadPage(cursorForPrevPage, prevIndex);
+}
+
+function resetAndFetch() {
+  cursorStack = [null];
+  loadPage(null, 0);
+}
+
+categoryFilter.addEventListener('change', resetAndFetch);
+limitSelect.addEventListener('change', resetAndFetch);
+
+// Initial load
+loadPage(null, 0);
+</script>
+
+</body>
+</html>
